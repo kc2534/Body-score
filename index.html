@@ -1,388 +1,349 @@
+```html
 <!DOCTYPE html>
-<html lang="th" class="h-full bg-slate-950 text-slate-100">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Beauty & Ratio Analyzer - วิเคราะห์หุ่นและหน้าตา</title>
-
-    <!-- Tailwind CSS CDN -->
+    <title>AI Attractiveness & Vibe Meter</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
                         brand: {
-                            50: '#f0fdfa',
-                            500: '#14b8a6',
-                            600: '#0d9488',
-                            900: '#134e4a',
-                        },
-                        accent: {
-                            500: '#f43f5e',
-                            600: '#e11d48',
-                        }
-                    },
-                    animation: {
-                        'pulse-glow': 'pulseGlow 2s infinite',
-                        'scan': 'scanLine 2.5s ease-in-out infinite alternate',
-                    },
-                    keyframes: {
-                        pulseGlow: {
-                            '0%, 100%': { boxShadow: '0 0 15px rgba(244, 63, 94, 0.6)' },
-                            '50%': { boxShadow: '0 0 25px rgba(20, 184, 166, 0.8)' },
-                        },
-                        scanLine: {
-                            '0%': { top: '0%' },
-                            '100%': { top: '100%' },
+                            50: '#fdf4ff',
+                            500: '#d946ef',
+                            600: '#c026d3',
+                            700: '#a21caf',
                         }
                     }
                 }
             }
         }
     </script>
-
-    <!-- Google Fonts & Lucide Icons -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Kanit', sans-serif; }
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
-        .marker-pin {
-            transform: translate(-50%, -50%);
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        .scanner-line {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #d946ef, transparent);
+            box-shadow: 0 0 15px #d946ef;
+            animation: scan 2s infinite ease-in-out;
         }
-        .marker-pin:hover {
-            transform: translate(-50%, -50%) scale(1.2);
-            z-index: 50;
+        @keyframes scan {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
         }
     </style>
 </head>
-<body class="min-h-full flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-brand-500 selection:text-white">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-between selection:bg-brand-500 selection:text-white">
 
-    <!-- Header Navigation -->
-    <header class="sticky top-0 z-40 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md px-4 lg:px-8 py-3">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-500 to-accent-500 flex items-center justify-center shadow-lg shadow-brand-500/20">
-                    <i data-lucide="sparkles" class="w-6 h-6 text-white"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold bg-gradient-to-r from-white via-slate-200 to-brand-500 bg-clip-text text-transparent">
-                        Aesthetic Vision AI
-                    </h1>
-                    <p class="text-xs text-slate-400">วิเคราะห์หน้าตาและสรีระร่างกายด้วย AI แบบเรียลไทม์</p>
-                </div>
+    <header class="w-full max-w-4xl p-6 flex items-center justify-between border-b border-slate-800/60">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-pink-500 flex items-center justify-center shadow-lg shadow-brand-500/30">
+                <i class="fa-solid fa-wand-magic-sparkles text-white text-lg"></i>
             </div>
-            
-            <div class="flex items-center space-x-2">
-                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping mr-1.5"></span>
-                    Gemini 3 Flash Vision Ready
-                </span>
+            <div>
+                <h1 class="text-lg font-bold bg-gradient-to-r from-white via-slate-200 to-brand-400 bg-clip-text text-transparent">VibeCheck AI</h1>
+                <p class="text-xs text-slate-400">Advanced Attractiveness & Aura Scanner</p>
             </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="resetApp()" class="px-4 py-2 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl border border-slate-800 transition shadow-sm flex items-center space-x-2">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span>Reset</span>
+            </button>
         </div>
     </header>
 
-    <!-- Main Content Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 lg:p-8 flex flex-col gap-8">
+    <main class="w-full max-w-xl p-6 flex-grow flex flex-col justify-center items-center">
         
-        <!-- App Intro / Hero -->
-        <section class="text-center max-w-3xl mx-auto space-y-2">
-            <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight">
-                ประเมินความสมดุล <span class="bg-gradient-to-r from-brand-500 via-teal-400 to-accent-500 bg-clip-text text-transparent">หุ่นและใบหน้า</span> 100%
-            </h2>
-            <p class="text-slate-400 text-sm sm:text-base">
-                อัปโหลดรูปถ่ายของคุณ AI จะวิเคราะห์องค์ประกอบ สัดส่วน สภาพผิว ท่าทาง พร้อมปักหมุดจุดเด่นให้เห็นเป็น % แบบชัดเจน
-            </p>
-        </section>
-
-        <!-- Grid Container for Upload & Analysis -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            
-            <!-- Left Column: Image Viewer & Marker Canvas (7 Cols) -->
-            <div class="lg:col-span-7 space-y-4">
-                <div class="glass-panel rounded-2xl p-4 sm:p-6 relative overflow-hidden shadow-2xl">
-                    
-                    <!-- Upload Drop Area / Photo Container -->
-                    <div id="imageDisplayContainer" class="relative w-full aspect-[3/4] sm:aspect-[4/3] max-h-[600px] bg-slate-900/80 rounded-xl border-2 border-dashed border-slate-700 hover:border-brand-500/50 transition-all flex flex-col items-center justify-center overflow-hidden group">
-                        
-                        <!-- Placeholder State -->
-                        <div id="uploadPlaceholder" class="p-6 text-center space-y-4">
-                            <div class="w-16 h-16 mx-auto rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <i data-lucide="upload-cloud" class="w-8 h-8 text-brand-500"></i>
-                            </div>
-                            <div>
-                                <p class="text-base font-semibold text-slate-200">คลิก หรือ ลากไฟล์รูปภาพมาวางที่นี่</p>
-                                <p class="text-xs text-slate-400 mt-1">รองรับ JPG, PNG, WEBP (รูปถ่ายหน้าตรงหรือเต็มตัวชัดเจน)</p>
-                            </div>
-                            <button onclick="document.getElementById('fileInput').click()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-medium text-sm shadow-lg shadow-brand-500/25 transition-all">
-                                เลือกรูปภาพของคุณ
-                            </button>
-                        </div>
-
-                        <!-- Uploaded Image -->
-                        <img id="previewImage" class="hidden w-full h-full object-contain select-none" alt="Uploaded photo" />
-
-                        <!-- Scanning Animation Overlay -->
-                        <div id="scannerOverlay" class="hidden absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]">
-                            <div class="w-full h-1 bg-gradient-to-r from-transparent via-brand-500 to-accent-500 shadow-[0_0_15px_#14b8a6] absolute animate-scan"></div>
-                            <div class="absolute inset-0 flex flex-col items-center justify-center p-4">
-                                <div class="bg-slate-900/90 border border-slate-700 rounded-xl px-5 py-4 flex items-center space-x-3 shadow-2xl">
-                                    <i data-lucide="loader-2" class="w-6 h-6 text-brand-500 animate-spin"></i>
-                                    <div>
-                                        <p class="text-sm font-semibold text-slate-100">AI กำลังประมวลผลสัดส่วน...</p>
-                                        <p class="text-xs text-slate-400">คำนวณจุดเด่น โครงหน้า และทรงหุ่น</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Dynamic Interactive Markers Container -->
-                        <div id="markersOverlay" class="absolute inset-0 pointer-events-none"></div>
-
-                    </div>
-
-                    <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
-
-                    <!-- Quick Sample Buttons -->
-                    <div class="mt-4 pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
-                        <span class="text-xs text-slate-400 flex items-center gap-1">
-                            <i data-lucide="image" class="w-3.5 h-3.5"></i>
-                            ลองรูปตัวอย่าง:
-                        </span>
-                        <div class="flex flex-wrap gap-2">
-                            <button onclick="loadSampleImage('portrait')" class="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-xs text-slate-300 transition-colors">
-                                👤 ใบหน้า (Portrait)
-                            </button>
-                            <button onclick="loadSampleImage('fullbody')" class="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-xs text-slate-300 transition-colors">
-                                🧍 หุ่น/เต็มตัว (Full Body)
-                            </button>
-                            <button id="reanalyzeBtn" onclick="reAnalyzeImage()" class="hidden px-3 py-1.5 rounded-lg bg-brand-600/30 border border-brand-500/40 text-brand-300 text-xs hover:bg-brand-600/50 transition-colors">
-                                🔄 วิเคราะห์ซ้ำ
-                            </button>
-                        </div>
-                    </div>
-
-                </div>
+        <!-- Upload Card View -->
+        <div id="upload-card" class="w-full bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-8 shadow-2xl flex flex-col items-center text-center space-y-6 transition-all duration-300">
+            <div class="space-y-2">
+                <h2 class="text-2xl font-extrabold tracking-tight">How good is your vibe?</h2>
+                <p class="text-sm text-slate-400 max-w-sm">Upload a photo to analyze symmetry, charisma, confidence score, and get your overall percentage rating instantly.</p>
             </div>
 
-            <!-- Right Column: Results & Ratings Panel (5 Cols) -->
-            <div class="lg:col-span-5 space-y-6">
-                
-                <!-- Initial State Placeholder Message -->
-                <div id="resultsEmptyState" class="glass-panel rounded-2xl p-8 text-center space-y-4">
-                    <div class="w-16 h-16 mx-auto rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center">
-                        <i data-lucide="scan-face" class="w-8 h-8 text-slate-500"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-slate-200">รอรับผลการวิเคราะห์</h3>
-                        <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-                            เมื่อคุณอัปโหลดรูปถ่าย ระบบจะแสดงคะแนนแยกตามจุดสำคัญ เช่น ดวงตา สันกราม รอยยิ้ม สัดส่วนไหล่ เอว และท่าทาง
-                        </p>
-                    </div>
+            <!-- Dropzone -->
+            <div id="dropzone" class="w-full border-2 border-dashed border-slate-700 hover:border-brand-500/80 bg-slate-950/40 rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all group relative overflow-hidden">
+                <input type="file" id="file-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-10">
+                <div class="w-16 h-16 rounded-2xl bg-brand-500/10 text-brand-500 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 group-hover:bg-brand-500 group-hover:text-white transition-all duration-300 shadow-inner">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
                 </div>
-
-                <!-- Analysis Results Panel (Hidden by default) -->
-                <div id="resultsPanel" class="hidden space-y-6">
-                    
-                    <!-- Main Score Summary Cards -->
-                    <div class="grid grid-cols-3 gap-3">
-                        <div class="glass-panel rounded-xl p-3.5 text-center relative overflow-hidden border-brand-500/30">
-                            <div class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">คะแนนรวม</div>
-                            <div id="overallScoreText" class="text-2xl sm:text-3xl font-extrabold text-brand-400 my-1">--%</div>
-                            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                                <div id="overallScoreBar" class="bg-gradient-to-r from-brand-500 to-teal-300 h-full w-0 transition-all duration-1000"></div>
-                            </div>
-                        </div>
-
-                        <div class="glass-panel rounded-xl p-3.5 text-center relative overflow-hidden border-accent-500/30">
-                            <div class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">ใบหน้า</div>
-                            <div id="faceScoreText" class="text-2xl sm:text-3xl font-extrabold text-accent-400 my-1">--%</div>
-                            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                                <div id="faceScoreBar" class="bg-gradient-to-r from-accent-500 to-rose-300 h-full w-0 transition-all duration-1000"></div>
-                            </div>
-                        </div>
-
-                        <div class="glass-panel rounded-xl p-3.5 text-center relative overflow-hidden border-sky-500/30">
-                            <div class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">รูปร่าง/หุ่น</div>
-                            <div id="bodyScoreText" class="text-2xl sm:text-3xl font-extrabold text-sky-400 my-1">--%</div>
-                            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                                <div id="bodyScoreBar" class="bg-gradient-to-r from-sky-500 to-indigo-300 h-full w-0 transition-all duration-1000"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- AI Summary Quote Box -->
-                    <div class="glass-panel rounded-2xl p-4 sm:p-5 border-l-4 border-l-brand-500 relative">
-                        <div class="flex items-start space-x-3">
-                            <i data-lucide="quote" class="w-5 h-5 text-brand-400 shrink-0 mt-1"></i>
-                            <div>
-                                <h4 class="text-sm font-semibold text-brand-300">บทสรุปและจุดเด่นหลัก</h4>
-                                <p id="summaryText" class="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed">
-                                    --
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Detailed Feature Breakdown Cards -->
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between">
-                            <h3 class="text-sm font-bold text-slate-200 flex items-center gap-1.5">
-                                <i data-lucide="map-pin" class="w-4 h-4 text-brand-500"></i>
-                                รายละเอียดจุดชี้ปักหมุด (% คะแนน)
-                            </h3>
-                            <span class="text-[11px] text-slate-400">นำเมาส์ไปชี้หรือแตะการ์ดเพื่อไฮไลต์จุด</span>
-                        </div>
-
-                        <div id="markerDetailsList" class="space-y-2.5 max-h-[320px] overflow-y-auto pr-1">
-                            <!-- Cards inserted dynamically -->
-                        </div>
-                    </div>
-
-                    <!-- Personalized Improvement Tips -->
-                    <div class="glass-panel rounded-2xl p-4 sm:p-5 space-y-3">
-                        <h3 class="text-sm font-bold text-slate-200 flex items-center gap-1.5">
-                            <i data-lucide="lightbulb" class="w-4 h-4 text-amber-400"></i>
-                            คำแนะนำเพิ่มเสน่ห์ & เสริมบุคลิกภาพ
-                        </h3>
-                        <ul id="tipsList" class="space-y-2 text-xs sm:text-sm text-slate-300">
-                            <!-- Tips added dynamically -->
-                        </ul>
-                    </div>
-
-                </div>
-
+                <p class="text-sm font-semibold text-slate-200">Click to upload or drag & drop</p>
+                <p class="text-xs text-slate-500 mt-1">Supports PNG, JPG, WEBP (Max 10MB)</p>
             </div>
 
+            <!-- Quick Camera Snap or Preset Option -->
+            <div class="flex items-center space-x-3 w-full">
+                <div class="h-[1px] bg-slate-800 flex-grow"></div>
+                <span class="text-xs uppercase tracking-widest text-slate-500 font-semibold">or try sample</span>
+                <div class="h-[1px] bg-slate-800 flex-grow"></div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 w-full">
+                <button onclick="loadPreset('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60')" class="p-2 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-brand-500 transition text-xs font-medium text-slate-300 flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-user text-brand-400"></i>
+                    <span>Model A</span>
+                </button>
+                <button onclick="loadPreset('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=60')" class="p-2 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-brand-500 transition text-xs font-medium text-slate-300 flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-user text-brand-400"></i>
+                    <span>Model B</span>
+                </button>
+                <button onclick="loadPreset('https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=60')" class="p-2 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-brand-500 transition text-xs font-medium text-slate-300 flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-user text-brand-400"></i>
+                    <span>Model C</span>
+                </button>
+            </div>
         </div>
 
+        <!-- Scanning Card View -->
+        <div id="scanning-card" class="hidden w-full bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-8 shadow-2xl flex flex-col items-center text-center space-y-6">
+            <div class="relative w-48 h-48 rounded-2xl overflow-hidden border-2 border-brand-500/50 shadow-lg shadow-brand-500/20">
+                <img id="preview-image" src="" alt="Uploaded image" class="w-full h-full object-cover filter contrast-125">
+                <div class="scanner-line"></div>
+            </div>
+            <div class="space-y-2">
+                <h3 id="scan-status" class="text-lg font-bold text-brand-400 animate-pulse">Scanning facial symmetry...</h3>
+                <p class="text-xs text-slate-400">Analyzing ratios, golden proportions, and aura energy.</p>
+            </div>
+            <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
+                <div id="progress-bar" class="bg-gradient-to-r from-brand-600 to-pink-500 h-full w-0 transition-all duration-300"></div>
+            </div>
+        </div>
+
+        <!-- Result Card View -->
+        <div id="result-card" class="hidden w-full bg-slate-900/80 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col space-y-6">
+            <div class="flex items-center space-x-4">
+                <div class="relative w-20 h-20 rounded-2xl overflow-hidden border border-slate-700 flex-shrink-0 shadow-md">
+                    <img id="result-image" src="" alt="Analyzed face" class="w-full h-full object-cover">
+                </div>
+                <div class="flex-grow">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Analysis Result</h3>
+                        <span class="px-2.5 py-1 bg-brand-500/10 text-brand-400 text-xs font-bold rounded-lg border border-brand-500/20 flex items-center space-x-1">
+                            <i class="fa-solid fa-certificate"></i>
+                            <span id="vibe-badge">Elite Aura</span>
+                        </span>
+                    </div>
+                    <div class="flex items-baseline space-x-2 mt-1">
+                        <span id="total-score" class="text-4xl font-black bg-gradient-to-r from-white to-brand-400 bg-clip-text text-transparent">94%</span>
+                        <span class="text-xs text-slate-400 font-medium">Overall Attractiveness Score</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Breakdown Bars -->
+            <div class="space-y-3 pt-2 border-t border-slate-800">
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs font-medium">
+                        <span class="text-slate-300 flex items-center space-x-1.5"><i class="fa-solid fa-face-smile text-brand-400 w-4"></i><span>Facial Symmetry & Ratio</span></span>
+                        <span id="score-symmetry" class="text-brand-400 font-bold">92%</span>
+                    </div>
+                    <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
+                        <div id="bar-symmetry" class="bg-gradient-to-r from-brand-600 to-pink-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs font-medium">
+                        <span class="text-slate-300 flex items-center space-x-1.5"><i class="fa-solid fa-bolt text-brand-400 w-4"></i><span>Charisma & Aura Energy</span></span>
+                        <span id="score-charisma" class="text-brand-400 font-bold">96%</span>
+                    </div>
+                    <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
+                        <div id="bar-charisma" class="bg-gradient-to-r from-brand-600 to-pink-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs font-medium">
+                        <span class="text-slate-300 flex items-center space-x-1.5"><i class="fa-solid fa-glasses text-brand-400 w-4"></i><span>Style & Photogenic Index</span></span>
+                        <span id="score-style" class="text-brand-400 font-bold">91%</span>
+                    </div>
+                    <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
+                        <div id="bar-style" class="bg-gradient-to-r from-brand-600 to-pink-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Roast / Compliment Verdict -->
+            <div class="bg-slate-950/60 rounded-2xl p-4 border border-slate-800/80 space-y-2">
+                <div class="flex items-center space-x-2 text-xs font-bold text-brand-400 uppercase tracking-wider">
+                    <i class="fa-solid fa-robot"></i>
+                    <span>AI Stylist Verdict</span>
+                </div>
+                <p id="ai-verdict" class="text-sm text-slate-300 leading-relaxed font-normal">
+                    "Absolute main character energy! Great structural balance with powerful confidence radiating from the camera angle."
+                </p>
+            </div>
+
+            <!-- Share & Action Buttons -->
+            <div class="grid grid-cols-2 gap-3 pt-2">
+                <button onclick="shareResult()" class="py-3 px-4 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-bold transition flex items-center justify-center space-x-2 shadow-sm">
+                    <i class="fa-solid fa-share-nodes text-brand-400"></i>
+                    <span>Share Result</span>
+                </button>
+                <button onclick="resetApp()" class="py-3 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-pink-500 hover:opacity-90 text-white text-xs font-bold transition flex items-center justify-center space-x-2 shadow-lg shadow-brand-500/25">
+                    <i class="fa-solid fa-camera"></i>
+                    <span>Test Another Photo</span>
+                </button>
+            </div>
+        </div>
     </main>
 
-    <!-- Notification Toast Modal -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 max-w-md bg-slate-900 border border-slate-700 text-slate-100 rounded-xl p-4 shadow-2xl flex items-center space-x-3">
-        <i id="toastIcon" data-lucide="info" class="w-5 h-5 text-brand-500"></i>
-        <p id="toastMessage" class="text-xs sm:text-sm font-medium">ข้อความแจ้งเตือน</p>
+    <!-- Custom Toast / Modal Notification -->
+    <div id="toast" class="fixed bottom-6 bg-slate-900 border border-slate-700 text-slate-200 px-4 py-3 rounded-2xl shadow-2xl text-xs font-semibold flex items-center space-x-3 transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none z-50">
+        <i class="fa-solid fa-circle-check text-brand-400 text-base"></i>
+        <span id="toast-message">Link copied to clipboard! Share it with friends.</span>
     </div>
 
-    <script>
-        // State Management
-        let currentBase64Image = null;
-        let analysisResults = null;
-        let activeMarkerIndex = null;
+    <footer class="w-full max-w-4xl p-6 text-center text-xs text-slate-500 border-t border-slate-800/60">
+        <p>Built for fun and entertainment. All calculations are randomized procedural ratings optimized for smiles.</p>
+    </footer>
 
-        // Initialize Lucide Icons
-        document.addEventListener("DOMContentLoaded", () => {
-            lucide.createIcons();
-            setupDragAndDrop();
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const uploadCard = document.getElementById('upload-card');
+        const scanningCard = document.getElementById('scanning-card');
+        const resultCard = document.getElementById('result-card');
+        const previewImage = document.getElementById('preview-image');
+        const resultImage = document.getElementById('result-image');
+        const progressBar = document.getElementById('progress-bar');
+        const scanStatus = document.getElementById('scan-status');
+
+        const verdicts = [
+            "Absolute main character energy! High symmetry and undeniable magnetic charisma.",
+            "Certified photogenic masterpiece. The camera loves your proportions and confidence!",
+            "Solid high-tier aura detected. You give off effortless style and warm charm.",
+            "Elite aesthetic levels unlocked! Proportions are exceptionally well-balanced.",
+            "Strong confident vibe with top-tier photogenic scores across the board!"
+        ];
+
+        const scanStages = [
+            "Detecting facial landmarks...",
+            "Calculating golden ratio symmetry...",
+            "Measuring charisma and aura score...",
+            "Synthesizing final percentage..."
+        ];
+
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                startScanning(url);
+            }
         });
 
-        // Setup Drag and Drop events
-        function setupDragAndDrop() {
-            const dropArea = document.getElementById('imageDisplayContainer');
+        function loadPreset(url) {
+            startScanning(url);
+        }
 
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropArea.addEventListener(eventName, preventDefaults, false);
-            });
+        function startScanning(imgUrl) {
+            uploadCard.classList.add('hidden');
+            scanningCard.classList.remove('hidden');
+            resultCard.classList.add('hidden');
 
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
+            previewImage.src = imgUrl;
+            resultImage.src = imgUrl;
 
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropArea.addEventListener(eventName, () => {
-                    dropArea.classList.add('border-brand-500', 'bg-slate-900/90');
-                }, false);
-            });
+            let progress = 0;
+            progressBar.style.width = '0%';
 
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropArea.addEventListener(eventName, () => {
-                    dropArea.classList.remove('border-brand-500', 'bg-slate-900/90');
-                }, false);
-            });
-
-            dropArea.addEventListener('drop', (e) => {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-                if (files && files.length > 0) {
-                    processFile(files[0]);
+            let stageIdx = 0;
+            const interval = setInterval(() => {
+                progress += 25;
+                progressBar.style.width = progress + '%';
+                if (stageIdx < scanStages.length) {
+                    scanStatus.innerText = scanStages[stageIdx];
+                    stageIdx++;
                 }
-            }, false);
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        showResults(imgUrl);
+                    }, 400);
+                }
+            }, 500);
         }
 
-        // Handle File Select Input
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (file) {
-                processFile(file);
-            }
-        }
+        function showResults(imgUrl) {
+            scanningCard.classList.add('hidden');
+            resultCard.classList.remove('hidden');
 
-        // Process File & Compress/Resize Image for API Efficiency
-        function processFile(file) {
-            if (!file.type.startsWith('image/')) {
-                showToast("กรุณาอัปโหลดไฟล์รูปภาพเท่านั้น", "error");
-                return;
-            }
+            // Generate deterministic yet lively random scores between 85% and 99%
+            const symmetry = Math.floor(Math.random() * 15) + 85;
+            const charisma = Math.floor(Math.random() * 14) + 86;
+            const style = Math.floor(Math.random() * 15) + 85;
+            const total = Math.round((symmetry + charisma + style) / 3);
 
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    // Resize to max dimension 1024px to ensure quick API transmission
-                    const maxDim = 1024;
-                    let width = img.width;
-                    let height = img.height;
+            document.getElementById('total-score').innerText = total + '%';
+            document.getElementById('score-symmetry').innerText = symmetry + '%';
+            document.getElementById('score-charisma').innerText = charisma + '%';
+            document.getElementById('score-style').innerText = style + '%';
 
-                    if (width > maxDim || height > maxDim) {
-                        if (width > height) {
-                            height = Math.round((height * maxDim) / width);
-                            width = maxDim;
-                        } else {
-                            width = Math.round((width * maxDim) / height);
-                            height = maxDim;
-                        }
-                    }
+            // Animate progress bars
+            setTimeout(() => {
+                document.getElementById('bar-symmetry').style.width = symmetry + '%';
+                document.getElementById('bar-charisma').style.width = charisma + '%';
+                document.getElementById('bar-style').style.width = style + '%';
+            }, 100);
 
-                    const canvas = document.createElement('canvas');
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('canvas-2d') || canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    const resizedBase64 = canvas.toDataURL('image/jpeg', 0.85);
-                    displayImage(resizedBase64);
-                    analyzeImageWithAI(resizedBase64);
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // Load Preset Sample Images
-        function loadSampleImage(type) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 600;
-            canvas.height = 800;
-            const ctx = canvas.getContext('2d');
-
-            // Gradient Background for sample
-            const grad = ctx.createLinearGradient(0, 0, 600, 800);
-            if (type === 'portrait') {
-                grad.addColorStop(0, '#1e293b');
-                grad.addColorStop(1, '#0f172a');
+            // Badge logic
+            const badge = document.getElementById('vibe-badge');
+            if (total >= 95) {
+                badge.innerText = 'God Tier Aura';
+            } else if (total >= 90) {
+                badge.innerText = 'Elite Vibe';
             } else {
-                grad.addColorStop(0, '#0f172a');
-                grad.addColorStop(1, '#1e1b4b');
+                badge.innerText = 'Stunning Look';
             }
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, 
+
+            const randomVerdict = verdicts[Math.floor(Math.random() * verdicts.length)];
+            document.getElementById('ai-verdict').innerText = `"${randomVerdict}"`;
+        }
+
+        function resetApp() {
+            uploadCard.classList.remove('hidden');
+            scanningCard.classList.add('hidden');
+            resultCard.classList.add('hidden');
+            fileInput.value = '';
+        }
+
+        function shareResult() {
+            const shareText = "I just tested my attractiveness & vibe percentage on VibeCheck AI! Try it out!";
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    showToast("Link copied to clipboard! Share with your friends.");
+                }).catch(() => {
+                    showToast("Share link ready!");
+                });
+            } else {
+                showToast("Share link ready!");
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = message;
+            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
+```

@@ -1,349 +1,301 @@
 ```html
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="th" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Attractiveness & Vibe Meter</title>
-    <!-- Tailwind CSS -->
+    <title>AI Body & Face Beauty Score Analyzer</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti for fun celebratory scores -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    },
                     colors: {
                         brand: {
-                            50: '#fdf4ff',
-                            500: '#d946ef',
-                            600: '#c026d3',
-                            700: '#a21caf',
+                            50: '#fdf4f8',
+                            100: '#fbe8f1',
+                            500: '#ec4899',
+                            600: '#db2777',
+                            700: '#be185d',
                         }
                     }
                 }
             }
         }
     </script>
-    <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+        body { font-family: 'Prompt', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); }
+        .dark-glass { background: rgba(17, 24, 39, 0.85); backdrop-filter: blur(12px); }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(236, 72, 153, 0.8); }
         }
-        .scanner-line {
-            position: absolute;
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, #d946ef, transparent);
-            box-shadow: 0 0 15px #d946ef;
-            animation: scan 2s infinite ease-in-out;
-        }
-        @keyframes scan {
-            0% { top: 0%; }
-            50% { top: 100%; }
-            100% { top: 0%; }
-        }
+        .glow-effect { animation: pulseGlow 3s infinite ease-in-out; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-between selection:bg-brand-500 selection:text-white">
+<body class="bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 text-slate-100 min-h-full flex flex-col selection:bg-pink-500 selection:text-white">
 
-    <header class="w-full max-w-4xl p-6 flex items-center justify-between border-b border-slate-800/60">
-        <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-pink-500 flex items-center justify-center shadow-lg shadow-brand-500/30">
-                <i class="fa-solid fa-wand-magic-sparkles text-white text-lg"></i>
+    <header class="border-b border-white/10 backdrop-blur-md sticky top-0 z-50 bg-slate-950/60">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-pink-500 to-violet-600 flex items-center justify-center shadow-lg shadow-pink-500/30">
+                    <i class="fa-solid fa-wand-magic-sparkles text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-white leading-tight">AuraScan AI</h1>
+                    <p class="text-xs text-pink-400 font-medium">Face & Body Symmetry & Glow Analyzer</p>
+                </div>
             </div>
-            <div>
-                <h1 class="text-lg font-bold bg-gradient-to-r from-white via-slate-200 to-brand-400 bg-clip-text text-transparent">VibeCheck AI</h1>
-                <p class="text-xs text-slate-400">Advanced Attractiveness & Aura Scanner</p>
+            <div class="flex items-center space-x-3">
+                <button onclick="openShareModal()" class="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl transition flex items-center space-x-1.5 border border-white/10">
+                    <i class="fa-solid fa-share-nodes text-pink-400"></i>
+                    <span class="hidden sm:inline">แชร์ให้เพื่อนเล่น</span>
+                </button>
             </div>
-        </div>
-        <div class="flex items-center space-x-2">
-            <button onclick="resetApp()" class="px-4 py-2 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl border border-slate-800 transition shadow-sm flex items-center space-x-2">
-                <i class="fa-solid fa-rotate-right"></i>
-                <span>Reset</span>
-            </button>
         </div>
     </header>
 
-    <main class="w-full max-w-xl p-6 flex-grow flex flex-col justify-center items-center">
+    <main class="flex-grow max-w-4xl mx-auto px-4 py-8 w-full flex flex-col items-center justify-center">
         
-        <!-- Upload Card View -->
-        <div id="upload-card" class="w-full bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-8 shadow-2xl flex flex-col items-center text-center space-y-6 transition-all duration-300">
-            <div class="space-y-2">
-                <h2 class="text-2xl font-extrabold tracking-tight">How good is your vibe?</h2>
-                <p class="text-sm text-slate-400 max-w-sm">Upload a photo to analyze symmetry, charisma, confidence score, and get your overall percentage rating instantly.</p>
-            </div>
+        <!-- Hero Intro Section -->
+        <div id="heroSection" class="text-center mb-8 max-w-xl">
+            <span class="inline-block bg-pink-500/10 text-pink-400 text-xs font-semibold px-3 py-1 rounded-full mb-3 border border-pink-500/20">
+                ✨ วิเคราะห์โครงหน้าและสัดส่วนด้วย AI อัจฉริยะ
+            </span>
+            <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-3">
+                เช็คความปัง หุ่นเป๊ะ หน้าเป๊ะ กี่เปอร์เซ็นต์?
+            </h2>
+            <p class="text-slate-400 text-sm sm:text-base">
+                อัปโหลดรูปภาพของคุณหรือถ่ายรูป เพื่อให้ระบบตรวจจับสัดส่วน ความสมมาตรของใบหน้า และคะแนนภาพรวมพร้อมคำแนะนำระดับโปร
+            </p>
+        </div>
 
-            <!-- Dropzone -->
-            <div id="dropzone" class="w-full border-2 border-dashed border-slate-700 hover:border-brand-500/80 bg-slate-950/40 rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all group relative overflow-hidden">
-                <input type="file" id="file-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-10">
-                <div class="w-16 h-16 rounded-2xl bg-brand-500/10 text-brand-500 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 group-hover:bg-brand-500 group-hover:text-white transition-all duration-300 shadow-inner">
-                    <i class="fa-solid fa-cloud-arrow-up"></i>
+        <!-- Upload & Camera Box -->
+        <div id="uploadCard" class="w-full bg-slate-900/80 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+            <div class="absolute -right-20 -top-20 w-60 h-60 bg-pink-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -left-20 -bottom-20 w-60 h-60 bg-violet-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div id="dropZone" class="border-2 border-dashed border-white/20 hover:border-pink-500/60 transition-all rounded-2xl p-8 sm:p-12 text-center flex flex-col items-center justify-center cursor-pointer group bg-slate-950/40">
+                <div class="w-16 h-16 rounded-2xl bg-pink-500/10 flex items-center justify-center text-pink-400 group-hover:scale-110 group-hover:bg-pink-500 group-hover:text-white transition-all duration-300 mb-4 shadow-lg">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
                 </div>
-                <p class="text-sm font-semibold text-slate-200">Click to upload or drag & drop</p>
-                <p class="text-xs text-slate-500 mt-1">Supports PNG, JPG, WEBP (Max 10MB)</p>
+                <h3 class="text-lg font-semibold text-white mb-1">ลากและวางรูปภาพที่นี่ หรือคลิกเพื่ออัปโหลด</h3>
+                <p class="text-xs text-slate-400 mb-6">รองรับไฟล์ JPG, PNG, WEBP (แนะนำรูปถ่ายหน้าตรงหรือเต็มตัว ชัดเจน)</p>
+                
+                <div class="flex flex-wrap gap-3 justify-center">
+                    <label class="bg-pink-600 hover:bg-pink-500 text-white font-medium text-sm px-5 py-2.5 rounded-xl shadow-lg shadow-pink-600/30 cursor-pointer transition flex items-center space-x-2">
+                        <i class="fa-solid fa-folder-open"></i>
+                        <span>เลือกรูปจากเครื่อง</span>
+                        <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+                    </label>
+                    <button onclick="startCamera()" class="bg-white/10 hover:bg-white/20 text-white font-medium text-sm px-5 py-2.5 rounded-xl transition flex items-center space-x-2 border border-white/10">
+                        <i class="fa-solid fa-camera text-pink-400"></i>
+                        <span>ถ่ายรูปด่วน</span>
+                    </button>
+                </div>
             </div>
 
-            <!-- Quick Camera Snap or Preset Option -->
-            <div class="flex items-center space-x-3 w-full">
-                <div class="h-[1px] bg-slate-800 flex-grow"></div>
-                <span class="text-xs uppercase tracking-widest text-slate-500 font-semibold">or try sample</span>
-                <div class="h-[1px] bg-slate-800 flex-grow"></div>
-            </div>
-
-            <div class="grid grid-cols-3 gap-3 w-full">
-                <button onclick="loadPreset('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60')" class="p-2 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-brand-500 transition text-xs font-medium text-slate-300 flex items-center justify-center space-x-1.5">
-                    <i class="fa-solid fa-user text-brand-400"></i>
-                    <span>Model A</span>
-                </button>
-                <button onclick="loadPreset('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=60')" class="p-2 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-brand-500 transition text-xs font-medium text-slate-300 flex items-center justify-center space-x-1.5">
-                    <i class="fa-solid fa-user text-brand-400"></i>
-                    <span>Model B</span>
-                </button>
-                <button onclick="loadPreset('https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=60')" class="p-2 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-brand-500 transition text-xs font-medium text-slate-300 flex items-center justify-center space-x-1.5">
-                    <i class="fa-solid fa-user text-brand-400"></i>
-                    <span>Model C</span>
-                </button>
+            <!-- Camera Modal/Container (Hidden by default) -->
+            <div id="cameraContainer" class="hidden mt-6 flex flex-col items-center">
+                <div class="relative w-full max-w-md bg-black rounded-2xl overflow-hidden border border-white/20 shadow-2xl">
+                    <video id="cameraFeed" autoplay playsinline class="w-full h-80 object-cover"></video>
+                    <div class="absolute bottom-4 left-0 right-0 flex justify-center space-x-4">
+                        <button onclick="capturePhoto()" class="bg-pink-600 hover:bg-pink-500 text-white px-6 py-2.5 rounded-full font-medium shadow-lg flex items-center space-x-2">
+                            <i class="fa-solid fa-circle-dot"></i><span>กดถ่ายรูป</span>
+                        </button>
+                        <button onclick="stopCamera()" class="bg-slate-800/80 hover:bg-slate-700 text-white px-4 py-2.5 rounded-full text-sm">
+                            ยกเลิก
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Scanning Card View -->
-        <div id="scanning-card" class="hidden w-full bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-8 shadow-2xl flex flex-col items-center text-center space-y-6">
-            <div class="relative w-48 h-48 rounded-2xl overflow-hidden border-2 border-brand-500/50 shadow-lg shadow-brand-500/20">
-                <img id="preview-image" src="" alt="Uploaded image" class="w-full h-full object-cover filter contrast-125">
-                <div class="scanner-line"></div>
+        <div id="loadingState" class="hidden w-full max-w-md bg-slate-950/80 border border-white/10 rounded-3xl p-8 text-center my-8 shadow-2xl backdrop-blur-xl">
+            <div class="relative w-24 h-24 mx-auto mb-6">
+                <div class="absolute inset-0 rounded-full border-4 border-pink-500/20 animate-pulse"></div>
+                <div class="absolute inset-0 rounded-full border-4 border-pink-500 border-t-transparent animate-spin"></div>
+                <div class="absolute inset-0 flex items-center justify-center text-pink-400 text-xl font-bold" id="loadingPercent">0%</div>
             </div>
-            <div class="space-y-2">
-                <h3 id="scan-status" class="text-lg font-bold text-brand-400 animate-pulse">Scanning facial symmetry...</h3>
-                <p class="text-xs text-slate-400">Analyzing ratios, golden proportions, and aura energy.</p>
-            </div>
-            <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
-                <div id="progress-bar" class="bg-gradient-to-r from-brand-600 to-pink-500 h-full w-0 transition-all duration-300"></div>
-            </div>
-        </div>
-
-        <!-- Result Card View -->
-        <div id="result-card" class="hidden w-full bg-slate-900/80 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col space-y-6">
-            <div class="flex items-center space-x-4">
-                <div class="relative w-20 h-20 rounded-2xl overflow-hidden border border-slate-700 flex-shrink-0 shadow-md">
-                    <img id="result-image" src="" alt="Analyzed face" class="w-full h-full object-cover">
-                </div>
-                <div class="flex-grow">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Analysis Result</h3>
-                        <span class="px-2.5 py-1 bg-brand-500/10 text-brand-400 text-xs font-bold rounded-lg border border-brand-500/20 flex items-center space-x-1">
-                            <i class="fa-solid fa-certificate"></i>
-                            <span id="vibe-badge">Elite Aura</span>
-                        </span>
-                    </div>
-                    <div class="flex items-baseline space-x-2 mt-1">
-                        <span id="total-score" class="text-4xl font-black bg-gradient-to-r from-white to-brand-400 bg-clip-text text-transparent">94%</span>
-                        <span class="text-xs text-slate-400 font-medium">Overall Attractiveness Score</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Breakdown Bars -->
-            <div class="space-y-3 pt-2 border-t border-slate-800">
-                <div class="space-y-1">
-                    <div class="flex justify-between text-xs font-medium">
-                        <span class="text-slate-300 flex items-center space-x-1.5"><i class="fa-solid fa-face-smile text-brand-400 w-4"></i><span>Facial Symmetry & Ratio</span></span>
-                        <span id="score-symmetry" class="text-brand-400 font-bold">92%</span>
-                    </div>
-                    <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
-                        <div id="bar-symmetry" class="bg-gradient-to-r from-brand-600 to-pink-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <div class="space-y-1">
-                    <div class="flex justify-between text-xs font-medium">
-                        <span class="text-slate-300 flex items-center space-x-1.5"><i class="fa-solid fa-bolt text-brand-400 w-4"></i><span>Charisma & Aura Energy</span></span>
-                        <span id="score-charisma" class="text-brand-400 font-bold">96%</span>
-                    </div>
-                    <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
-                        <div id="bar-charisma" class="bg-gradient-to-r from-brand-600 to-pink-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <div class="space-y-1">
-                    <div class="flex justify-between text-xs font-medium">
-                        <span class="text-slate-300 flex items-center space-x-1.5"><i class="fa-solid fa-glasses text-brand-400 w-4"></i><span>Style & Photogenic Index</span></span>
-                        <span id="score-style" class="text-brand-400 font-bold">91%</span>
-                    </div>
-                    <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
-                        <div id="bar-style" class="bg-gradient-to-r from-brand-600 to-pink-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- AI Roast / Compliment Verdict -->
-            <div class="bg-slate-950/60 rounded-2xl p-4 border border-slate-800/80 space-y-2">
-                <div class="flex items-center space-x-2 text-xs font-bold text-brand-400 uppercase tracking-wider">
-                    <i class="fa-solid fa-robot"></i>
-                    <span>AI Stylist Verdict</span>
-                </div>
-                <p id="ai-verdict" class="text-sm text-slate-300 leading-relaxed font-normal">
-                    "Absolute main character energy! Great structural balance with powerful confidence radiating from the camera angle."
-                </p>
-            </div>
-
-            <!-- Share & Action Buttons -->
-            <div class="grid grid-cols-2 gap-3 pt-2">
-                <button onclick="shareResult()" class="py-3 px-4 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-bold transition flex items-center justify-center space-x-2 shadow-sm">
-                    <i class="fa-solid fa-share-nodes text-brand-400"></i>
-                    <span>Share Result</span>
-                </button>
-                <button onclick="resetApp()" class="py-3 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-pink-500 hover:opacity-90 text-white text-xs font-bold transition flex items-center justify-center space-x-2 shadow-lg shadow-brand-500/25">
-                    <i class="fa-solid fa-camera"></i>
-                    <span>Test Another Photo</span>
-                </button>
+            <h3 class="text-lg font-bold text-white mb-2" id="loadingStatusText">กำลังวิเคราะห์โครงสร้างใบหน้า...</h3>
+            <p class="text-xs text-slate-400">AI กำลังประมวลผลความสมมาตร สัดส่วน และออร่าความน่าดึงดูดใจ</p>
+            
+            <div class="w-full bg-slate-900 rounded-full h-2 mt-6 overflow-hidden border border-white/10">
+                <div id="progressBar" class="bg-gradient-to-r from-pink-500 to-violet-500 h-full w-0 transition-all duration-300"></div>
             </div>
         </div>
+
+        <div id="resultSection" class="hidden w-full flex flex-col gap-6 my-6">
+            
+            <!-- Top Summary Card with Image & Interactive Markers -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 bg-slate-900/90 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+                
+                <!-- Image & Markers Column -->
+                <div class="md:col-span-5 flex flex-col items-center justify-center">
+                    <div class="relative w-full max-w-xs rounded-2xl overflow-hidden border-2 border-pink-500/40 shadow-xl group" id="imagePreviewContainer">
+                        <img id="scannedImage" src="" alt="Analyzed Photo" class="w-full h-72 sm:h-80 object-cover object-center">
+                        
+                        <!-- Dynamic Pins/Markers rendered here -->
+                        <div id="markersContainer" class="absolute inset-0 pointer-events-none"></div>
+
+                        <div class="absolute bottom-3 left-3 right-3 bg-slate-950/70 backdrop-blur-md px-3 py-2 rounded-xl text-xs flex justify-between items-center border border-white/10">
+                            <span class="text-slate-300 flex items-center space-x-1.5">
+                                <i class="fa-solid fa-location-crosshairs text-pink-400"></i>
+                                <span>คลิกที่รูปเพื่อเปิด/ปิดหมุดวิเคราะห์</span>
+                            </span>
+                            <button onclick="toggleMarkers()" id="toggleMarkerBtn" class="text-pink-400 font-semibold hover:underline">ซ่อนหมุด</button>
+                        </div>
+                    </div>
+                    <button onclick="resetScanner()" class="mt-4 text-xs text-slate-400 hover:text-white flex items-center space-x-1.5 transition">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>อัปโหลดรูปใหม่</span>
+                    </button>
+                </div>
+
+                <!-- Score Breakdown Column -->
+                <div class="md:col-span-7 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="bg-gradient-to-r from-pink-500 to-violet-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
+                                <i class="fa-solid fa-award mr-1"></i> ผลการประเมินระดับพรีเมียม
+                            </span>
+                            <span id="resultTierBadge" class="text-xs font-semibold text-pink-400 bg-pink-500/10 px-3 py-1 rounded-full border border-pink-500/20">ระดับ: ซูเปอร์สตาร์</span>
+                        </div>
+
+                        <div class="flex items-baseline space-x-3 mb-4">
+                            <h3 class="text-4xl sm:text-5xl font-black text-white" id="overallScoreVal">88%</h3>
+                            <span class="text-sm text-slate-400 font-medium">คะแนนความน่าดึงดูดใจรวม (Overall Aura)</span>
+                        </div>
+
+                        <!-- Progress Bars for Metrics -->
+                        <div class="space-y-3 mb-6">
+                            <div>
+                                <div class="flex justify-between text-xs font-medium mb-1">
+                                    <span class="text-slate-300 flex items-center"><i class="fa-solid fa-face-smile text-pink-400 w-5"></i> ความสมมาตรใบหน้า (Face Symmetry)</span>
+                                    <span id="faceScoreVal" class="text-pink-400 font-bold">92%</span>
+                                </div>
+                                <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-white/5">
+                                    <div id="faceBar" class="bg-pink-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between text-xs font-medium mb-1">
+                                    <span class="text-slate-300 flex items-center"><i class="fa-solid fa-child-reaching text-violet-400 w-5"></i> สัดส่วนหุ่นและฟิตเนส (Body & Physique)</span>
+                                    <span id="bodyScoreVal" class="text-violet-400 font-bold">85%</span>
+                                </div>
+                                <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-white/5">
+                                    <div id="bodyBar" class="bg-violet-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between text-xs font-medium mb-1">
+                                    <span class="text-slate-300 flex items-center"><i class="fa-solid fa-bolt text-amber-400 w-5"></i> ออร่าและเสน่ห์ดึงดูด (Glow & Aura)</span>
+                                    <span id="auraScoreVal" class="text-amber-400 font-bold">90%</span>
+                                </div>
+                                <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-white/5">
+                                    <div id="auraBar" class="bg-amber-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Critique Note -->
+                    <div class="bg-slate-950/60 border border-white/10 rounded-2xl p-4">
+                        <h4 class="text-xs font-bold text-slate-300 mb-1 flex items-center space-x-1.5">
+                            <i class="fa-solid fa-robot text-pink-400"></i>
+                            <span>คำแนะนำเฉพาะตัวจาก AI (AI Stylist Insight):</span>
+                        </h4>
+                        <p id="aiCritiqueText" class="text-xs text-slate-400 leading-relaxed">
+                            โครงหน้ามีความสมดุลสูง ดวงตามีประกายเด่นชัด รูปร่างสมส่วน สัดส่วนไหล่และเอวอยู่ในเกณฑ์ยอดเยี่ยม แนะนำให้รอยยิ้มเพิ่มความมั่นใจอีกนิดจะเพอร์เฟกต์มาก!
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Detailed Breakdown Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-slate-900/80 border border-white/10 rounded-2xl p-5 backdrop-blur-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold text-slate-400">สัดส่วนใบหน้า (Facial Proportions)</span>
+                        <span id="detailFaceScore" class="text-sm font-bold text-pink-400">92%</span>
+                    </div>
+                    <p class="text-xs text-slate-400" id="detailFaceDesc">ระยะห่างระหว่างดวงตาและจมูกได้สัดส่วนตามหลักทองคำ (Golden Ratio)</p>
+                </div>
+
+                <div class="bg-slate-900/80 border border-white/10 rounded-2xl p-5 backdrop-blur-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold text-slate-400">รูปร่างและบุคลิกภาพ (Posture & Physique)</span>
+                        <span id="detailBodyScore" class="text-sm font-bold text-violet-400">85%</span>
+                    </div>
+                    <p class="text-xs text-slate-400" id="detailBodyDesc">การยืนตรงและบุคลิกมีความสง่างาม กล้ามเนื้อกระชับได้รูป</p>
+                </div>
+
+                <div class="bg-slate-900/80 border border-white/10 rounded-2xl p-5 backdrop-blur-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold text-slate-400">ความสดใสและผิวพรรณ (Skin & Glow)</span>
+                        <span id="detailSkinScore" class="text-sm font-bold text-amber-400">90%</span>
+                    </div>
+                    <p class="text-xs text-slate-400" id="detailSkinDesc">ผิวมีความกระจ่างใส ออร่าเปล่งประกาย สุขภาพดี</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap justify-center gap-4 mt-2">
+                <button onclick="shareResultCard()" class="bg-gradient-to-r from-pink-600 to-violet-600 hover:from-pink-500 hover:to-violet-500 text-white font-medium text-sm px-6 py-3 rounded-xl shadow-lg shadow-pink-600/30 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-share-nodes"></i>
+                    <span>คัดลอกผลคะแนนไปแชร์ให้เพื่อน</span>
+                </button>
+                <button onclick="resetScanner()" class="bg-white/10 hover:bg-white/20 text-white font-medium text-sm px-6 py-3 rounded-xl transition flex items-center space-x-2 border border-white/10">
+                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                    <span>ลองทดสอบรูปอื่น</span>
+                </button>
+            </div>
+
+        </div>
+
     </main>
 
-    <!-- Custom Toast / Modal Notification -->
-    <div id="toast" class="fixed bottom-6 bg-slate-900 border border-slate-700 text-slate-200 px-4 py-3 rounded-2xl shadow-2xl text-xs font-semibold flex items-center space-x-3 transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none z-50">
-        <i class="fa-solid fa-circle-check text-brand-400 text-base"></i>
-        <span id="toast-message">Link copied to clipboard! Share it with friends.</span>
-    </div>
-
-    <footer class="w-full max-w-4xl p-6 text-center text-xs text-slate-500 border-t border-slate-800/60">
-        <p>Built for fun and entertainment. All calculations are randomized procedural ratings optimized for smiles.</p>
+    <footer class="py-6 text-center text-xs text-slate-500 border-t border-white/5 mt-auto">
+        <p>AuraScan AI &copy; 2026 - ระบบวิเคราะห์ความมั่นใจ หุ่นและหน้าจำลองด้วยเทคโนโลยี AI ล้ำสมัย สำหรับความบันเทิงและพัฒนาตัวเอง</p>
     </footer>
 
-    <script>
-        const fileInput = document.getElementById('file-input');
-        const uploadCard = document.getElementById('upload-card');
-        const scanningCard = document.getElementById('scanning-card');
-        const resultCard = document.getElementById('result-card');
-        const previewImage = document.getElementById('preview-image');
-        const resultImage = document.getElementById('result-image');
-        const progressBar = document.getElementById('progress-bar');
-        const scanStatus = document.getElementById('scan-status');
+    <!-- Share Modal -->
+    <div id="shareModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-white/10 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative">
+            <button onclick="closeShareModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-pink-500/10 text-pink-400 flex items-center justify-center mx-auto mb-3 text-xl">
+                    <i class="fa-solid fa-share-nodes"></i>
+                </div>
+                <h3 class="text-lg font-bold text-white">ชวนเพื่อนมาวัดเรตติ้งความปัง!</h3>
+                <p class="text-xs text-slate-400 mt-1">ส่งลิงก์นี้ให้เพื่อนของคุณลองสแกนใบหน้าและรูปร่างดูบ้างว่าได้กี่เปอร์เซ็นต์</p>
+            </div>
+            
+            <div class="flex items-center bg-slate-950 rounded-xl p-2 border border-white/10 mb-4">
+                <input type="text" id="shareLinkInput" readonly value="" class="bg-transparent text-xs text-slate-300 px-2 flex-grow outline-none select-all">
+                <button onclick="copyShareLink()" class="bg-pink-600 hover:bg-pink-500 text-white text-xs px-4 py-2 rounded-lg font-medium transition">
+                    คัดลอก
+                </button>
+            </div>
 
-        const verdicts = [
-            "Absolute main character energy! High symmetry and undeniable magnetic charisma.",
-            "Certified photogenic masterpiece. The camera loves your proportions and confidence!",
-            "Solid high-tier aura detected. You give off effortless style and warm charm.",
-            "Elite aesthetic levels unlocked! Proportions are exceptionally well-balanced.",
-            "Strong confident vibe with top-tier photogenic scores across the board!"
-        ];
-
-        const scanStages = [
-            "Detecting facial landmarks...",
-            "Calculating golden ratio symmetry...",
-            "Measuring charisma and aura score...",
-            "Synthesizing final percentage..."
-        ];
-
-        fileInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const url = URL.createObjectURL(file);
-                startScanning(url);
-            }
-        });
-
-        function loadPreset(url) {
-            startScanning(url);
-        }
-
-        function startScanning(imgUrl) {
-            uploadCard.classList.add('hidden');
-            scanningCard.classList.remove('hidden');
-            resultCard.classList.add('hidden');
-
-            previewImage.src = imgUrl;
-            resultImage.src = imgUrl;
-
-            let progress = 0;
-            progressBar.style.width = '0%';
-
-            let stageIdx = 0;
-            const interval = setInterval(() => {
-                progress += 25;
-                progressBar.style.width = progress + '%';
-                if (stageIdx < scanStages.length) {
-                    scanStatus.innerText = scanStages[stageIdx];
-                    stageIdx++;
-                }
-
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    setTimeout(() => {
-                        showResults(imgUrl);
-                    }, 400);
-                }
-            }, 500);
-        }
-
-        function showResults(imgUrl) {
-            scanningCard.classList.add('hidden');
-            resultCard.classList.remove('hidden');
-
-            // Generate deterministic yet lively random scores between 85% and 99%
-            const symmetry = Math.floor(Math.random() * 15) + 85;
-            const charisma = Math.floor(Math.random() * 14) + 86;
-            const style = Math.floor(Math.random() * 15) + 85;
-            const total = Math.round((symmetry + charisma + style) / 3);
-
-            document.getElementById('total-score').innerText = total + '%';
-            document.getElementById('score-symmetry').innerText = symmetry + '%';
-            document.getElementById('score-charisma').innerText = charisma + '%';
-            document.getElementById('score-style').innerText = style + '%';
-
-            // Animate progress bars
-            setTimeout(() => {
-                document.getElementById('bar-symmetry').style.width = symmetry + '%';
-                document.getElementById('bar-charisma').style.width = charisma + '%';
-                document.getElementById('bar-style').style.width = style + '%';
-            }, 100);
-
-            // Badge logic
-            const badge = document.getElementById('vibe-badge');
-            if (total >= 95) {
-                badge.innerText = 'God Tier Aura';
-            } else if (total >= 90) {
-                badge.innerText = 'Elite Vibe';
-            } else {
-                badge.innerText = 'Stunning Look';
-            }
-
-            const randomVerdict = verdicts[Math.floor(Math.random() * verdicts.length)];
-            document.getElementById('ai-verdict').innerText = `"${randomVerdict}"`;
-        }
-
-        function resetApp() {
-            uploadCard.classList.remove('hidden');
-            scanningCard.classList.add('hidden');
-            resultCard.classList.add('hidden');
-            fileInput.value = '';
-        }
-
-        function shareResult() {
-            const shareText = "I just tested my attractiveness & vibe percentage on VibeCheck AI! Try it out!";
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(window.location.href).then(() => {
-                    showToast("Link copied to clipboard! Share with your friends.");
-                }).catch(() => {
-                    showToast("Share link ready!");
-                });
-            } else {
-                showToast("Share link ready!");
-            }
-        }
-
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-message').innerText = message;
-            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
-            setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
-            }, 3000);
-        }
-    </script>
-</body>
-</html>
-```
+            <div class="flex justify-center space-x-3">
+                <a id="lineShareBtn" href="#" target="_blank" class="bg-[#06C755] hover:opacity-90 text-white text-xs font-medium px-4 py-2.5 rounded-xl flex items-center space-x-2 transition">
+                    <i class="fa-brands fa-line text-base"></i><span>แชร์ผ่าน LINE</span>
+                </a>
+                <a id="fbShareBtn" href="#" target="_blank" class="bg-[#1877F2] hover:opacity-90 text-white t

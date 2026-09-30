@@ -36,7 +36,6 @@
     <style>
         body { font-family: 'Prompt', sans-serif; }
         .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); }
-        .dark-glass { background: rgba(17, 24, 39, 0.85); backdrop-filter: blur(12px); }
         @keyframes pulseGlow {
             0%, 100% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.4); }
             50% { box-shadow: 0 0 30px rgba(236, 72, 153, 0.8); }
@@ -143,16 +142,17 @@
                 
                 <!-- Image & Markers Column -->
                 <div class="md:col-span-5 flex flex-col items-center justify-center">
-                    <div class="relative w-full max-w-xs rounded-2xl overflow-hidden border-2 border-pink-500/40 shadow-xl group" id="imagePreviewContainer">
-                        <img id="scannedImage" src="" alt="Analyzed Photo" class="w-full h-72 sm:h-80 object-cover object-center">
+                    <!-- Image Wrapper with Exact Proportional Aspect Fit -->
+                    <div class="relative w-full max-w-xs rounded-2xl overflow-hidden border-2 border-pink-500/40 shadow-xl bg-black/60 flex items-center justify-center" style="min-height: 320px;">
+                        <img id="scannedImage" src="" alt="Analyzed Photo" class="w-full h-auto max-h-96 object-contain block mx-auto">
                         
-                        <!-- Dynamic Pins/Markers rendered here -->
+                        <!-- Dynamic Pins/Markers container mapped directly over the image frame -->
                         <div id="markersContainer" class="absolute inset-0 pointer-events-none"></div>
 
-                        <div class="absolute bottom-3 left-3 right-3 bg-slate-950/70 backdrop-blur-md px-3 py-2 rounded-xl text-xs flex justify-between items-center border border-white/10">
+                        <div class="absolute bottom-3 left-3 right-3 bg-slate-950/80 backdrop-blur-md px-3 py-2 rounded-xl text-xs flex justify-between items-center border border-white/10 z-20">
                             <span class="text-slate-300 flex items-center space-x-1.5">
                                 <i class="fa-solid fa-location-crosshairs text-pink-400"></i>
-                                <span>คลิกที่รูปเพื่อเปิด/ปิดหมุดวิเคราะห์</span>
+                                <span>หมุดวิเคราะห์จุดเด่น</span>
                             </span>
                             <button onclick="toggleMarkers()" id="toggleMarkerBtn" class="text-pink-400 font-semibold hover:underline">ซ่อนหมุด</button>
                         </div>
@@ -298,4 +298,308 @@
                 <a id="lineShareBtn" href="#" target="_blank" class="bg-[#06C755] hover:opacity-90 text-white text-xs font-medium px-4 py-2.5 rounded-xl flex items-center space-x-2 transition">
                     <i class="fa-brands fa-line text-base"></i><span>แชร์ผ่าน LINE</span>
                 </a>
-                <a id="fbShareBtn" href="#" target="_blank" class="bg-[#1877F2] hover:opacity-90 text-white t
+                <a id="fbShareBtn" href="#" target="_blank" class="bg-[#1877F2] hover:opacity-90 text-white text-xs font-medium px-4 py-2.5 rounded-xl flex items-center space-x-2 transition">
+                    <i class="fa-brands fa-facebook text-base"></i><span>แชร์ผ่าน Facebook</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 bg-slate-900 border border-pink-500/40 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center space-x-3">
+        <div class="w-8 h-8 rounded-xl bg-pink-500/20 text-pink-400 flex items-center justify-center">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <span id="toastMessage" class="text-xs font-medium">คัดลอกลิงก์สำเร็จ!</span>
+    </div>
+
+    <script>
+        let mediaStream = null;
+        let markersVisible = true;
+        let currentScores = { overall: 88, face: 92, body: 85, aura: 90 };
+
+        // Set share link value on load
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('shareLinkInput').value = window.location.href;
+            document.getElementById('lineShareBtn').href = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(window.location.href)}`;
+            document.getElementById('fbShareBtn').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`;
+            
+            // Drag and drop events
+            const dropZone = document.getElementById('dropZone');
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('border-pink-500', 'bg-pink-500/5');
+                }, false);
+            });
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('border-pink-500', 'bg-pink-500/5');
+                }, false);
+            });
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files.length > 0) {
+                    processImageFile(files[0]);
+                }
+            });
+        });
+
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            if (files.length > 0) {
+                processImageFile(files[0]);
+            }
+        }
+
+        // Camera handling
+        async function startCamera() {
+            const container = document.getElementById('cameraContainer');
+            container.classList.remove('hidden');
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+                const video = document.getElementById('cameraFeed');
+                video.srcObject = mediaStream;
+            } catch (err) {
+                showToast("ไม่สามารถเปิดกล้องได้ กรุณาตรวจสอบสิทธิ์การใช้งานกล้อง");
+                container.classList.add('hidden');
+            }
+        }
+
+        function stopCamera() {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+            document.getElementById('cameraContainer').classList.add('hidden');
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('cameraFeed');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            stopCamera();
+            
+            canvas.toBlob((blob) => {
+                const file = new File([blob], "camera_capture.jpg", { type: "image/jpeg" });
+                processImageFile(file);
+            }, 'image/jpeg');
+        }
+
+        function processImageFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showToast("กรุณาอัปโหลดไฟล์รูปภาพเท่านั้น");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imageUrl = e.target.result;
+                // Preload image object to guarantee it decodes before displaying
+                const testImg = new Image();
+                testImg.onload = function() {
+                    runAnalysisSimulation(imageUrl);
+                };
+                testImg.onerror = function() {
+                    showToast("ไม่สามารถโหลดรูปภาพนี้ได้ กรุณาลองใหม่อีกครั้ง");
+                };
+                testImg.src = imageUrl;
+            };
+            reader.onerror = function() {
+                showToast("เกิดข้อผิดพลาดในการอ่านไฟล์");
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Simulation of AI Scanning with interactive percentage markers
+        function runAnalysisSimulation(imageUrl) {
+            document.getElementById('uploadCard').classList.add('hidden');
+            document.getElementById('heroSection').classList.add('hidden');
+            document.getElementById('loadingState').classList.remove('hidden');
+
+            let progress = 0;
+            const percentEl = document.getElementById('loadingPercent');
+            const progressBar = document.getElementById('progressBar');
+            const statusText = document.getElementById('loadingStatusText');
+
+            const statuses = [
+                "กำลังสแกนโครงสร้างใบหน้า (Facial Geometry)...",
+                "วิเคราะห์ความสมมาตรตา จมูก ริมฝีปาก...",
+                "คำนวณสัดส่วนรูปร่างและบุคลิกภาพ (Physique Index)...",
+                "ประเมินออร่าและสร้างคะแนนความปัง..."
+            ];
+
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 15) + 8;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        showResults(imageUrl);
+                    }, 500);
+                }
+                percentEl.textContent = progress + '%';
+                progressBar.style.width = progress + '%';
+                
+                let statusIdx = Math.floor((progress / 100) * statuses.length);
+                if (statusIdx >= statuses.length) statusIdx = statuses.length - 1;
+                statusText.textContent = statuses[statusIdx];
+            }, 180);
+        }
+
+        function showResults(imageUrl) {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('resultSection').classList.remove('hidden');
+
+            const imgElement = document.getElementById('scannedImage');
+            
+            // Assign image source directly
+            imgElement.src = imageUrl;
+
+            const face = Math.floor(Math.random() * 12) + 85; 
+            const body = Math.floor(Math.random() * 15) + 80; 
+            const aura = Math.floor(Math.random() * 10) + 88; 
+            const overall = Math.round((face * 0.4) + (body * 0.35) + (aura * 0.25));
+
+            currentScores = { overall, face, body, aura };
+
+            document.getElementById('overallScoreVal').textContent = overall + '%';
+            document.getElementById('faceScoreVal').textContent = face + '%';
+            document.getElementById('bodyScoreVal').textContent = body + '%';
+            document.getElementById('auraScoreVal').textContent = aura + '%';
+
+            document.getElementById('detailFaceScore').textContent = face + '%';
+            document.getElementById('detailBodyScore').textContent = body + '%';
+            document.getElementById('detailSkinScore').textContent = aura + '%';
+
+            let tierText = "ระดับ: ซูเปอร์สตาร์ออร่าพุ่ง";
+            if (overall >= 93) tierText = "ระดับ: เพอร์เฟกต์ไอดอล (Top 1%)";
+            else if (overall >= 88) tierText = "ระดับ: ฮอตและดูดีมีเสน่ห์สูงมาก";
+            document.getElementById('resultTierBadge').textContent = tierText;
+
+            const critiques = [
+                `โครงหน้ามีความสมดุล ${face}% ดวงตาและโครงสร้างจมูกโดดเด่น สัดส่วนร่างกายมีความสมส่วน บุคลิกดูมั่นใจและน่าดึงดูดใจมาก!`,
+                `สัดส่วนภาพรวมยอดเยี่ยมมาก (${overall}%) ความสมมาตรของใบหน้าอยู่ในเกณฑ์สูง (${face}%) ผิวพรรณและออร่าเปล่งประกาย แนะนำรอยยิ้มเพิ่มเสน่ห์อีกนิด!`,
+                `หุ่นและรูปร่างเพอร์เฟกต์ (${body}%) โครงหน้าคมชัดมีเอกลักษณ์ AI แนะนำให้รักษาความมั่นใจนี้ไว้ เปล่งออร่าซูเปอร์สตาร์เต็มพิกัด!`
+            ];
+            document.getElementById('aiCritiqueText').textContent = critiques[Math.floor(Math.random() * critiques.length)];
+
+            setTimeout(() => {
+                document.getElementById('faceBar').style.width = face + '%';
+                document.getElementById('bodyBar').style.width = body + '%';
+                document.getElementById('auraBar').style.width = aura + '%';
+            }, 200);
+
+            renderMarkers(face, body, aura);
+
+            if (overall >= 85) {
+                try {
+                    confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+                } catch(e) {}
+            }
+        }
+
+        // Render percentage percentage markers positioned accurately centered on standard face and body areas
+        function renderMarkers(face, body, aura) {
+            const container = document.getElementById('markersContainer');
+            container.innerHTML = '';
+
+            // Using centered percentages on standard portrait/body frame zones
+            const markerData = [
+                { top: '25%', left: '50%', label: `ดวงตา & หน้าผาก: ${face}%`, color: 'bg-pink-500' },
+                { top: '40%', left: '50%', label: `โครงจมูก & โหนกแก้ม: ${Math.min(99, face + 2)}%`, color: 'bg-violet-500' },
+                { top: '70%', left: '50%', label: `สัดส่วนรูปร่าง: ${body}%`, color: 'bg-amber-500' },
+                { top: '32%', left: '22%', label: `ออร่าผิวพรรณ: ${aura}%`, color: 'bg-emerald-500' }
+            ];
+
+            markerData.forEach((m) => {
+                const pin = document.createElement('div');
+                pin.className = `absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300 group/pin z-10`;
+                pin.style.top = m.top;
+                pin.style.left = m.left;
+
+                pin.innerHTML = `
+                    <div class="relative flex items-center justify-center">
+                        <span class="absolute w-7 h-7 rounded-full ${m.color} opacity-40 animate-ping"></span>
+                        <div class="w-5 h-5 rounded-full ${m.color} border-2 border-white shadow-lg flex items-center justify-center text-[9px] font-bold text-white">
+                            <i class="fa-solid fa-check text-[7px]"></i>
+                        </div>
+                        <div class="absolute left-6 bg-slate-950/95 border border-white/20 text-white text-[10px] px-2.5 py-1 rounded-lg whitespace-nowrap shadow-xl opacity-95 group-hover/pin:scale-105 transition pointer-events-none">
+                            ${m.label}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(pin);
+            });
+        }
+
+        function toggleMarkers() {
+            markersVisible = !markersVisible;
+            const container = document.getElementById('markersContainer');
+            const btn = document.getElementById('toggleMarkerBtn');
+            if (markersVisible) {
+                container.classList.remove('hidden');
+                btn.textContent = 'ซ่อนหมุด';
+            } else {
+                container.classList.add('hidden');
+                btn.textContent = 'แสดงหมุด';
+            }
+        }
+
+        function resetScanner() {
+            document.getElementById('resultSection').classList.add('hidden');
+            document.getElementById('uploadCard').classList.remove('hidden');
+            document.getElementById('heroSection').classList.remove('hidden');
+            document.getElementById('fileInput').value = '';
+            document.getElementById('faceBar').style.width = '0%';
+            document.getElementById('bodyBar').style.width = '0%';
+            document.getElementById('auraBar').style.width = '0%';
+        }
+
+        function openShareModal() {
+            document.getElementById('shareModal').classList.remove('hidden');
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.add('hidden');
+        }
+
+        function copyShareLink() {
+            const input = document.getElementById('shareLinkInput');
+            input.select();
+            document.execCommand('copy');
+            showToast('คัดลอกลิงก์สำเร็จ! ส่งให้เพื่อนลองเล่นได้เลย');
+            closeShareModal();
+        }
+
+        function shareResultCard() {
+            const text = `สแกนความปังกับ AuraScan AI ได้คะแนนรวม ${currentScores.overall}% (ความสมมาตรหน้า ${currentScores.face}%, หุ่นและฟิตเนส ${currentScores.body}%) มาลองเช็คหุ่นและหน้าของคุณกัน! ${window.location.href}`;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('คัดลอกผลการวิเคราะห์และลิงก์สำหรับแชร์แล้ว!');
+                }).catch(() => {
+                    openShareModal();
+                });
+            } else {
+                openShareModal();
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
+```
